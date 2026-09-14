@@ -143,7 +143,7 @@ bool Graph::RunFleuryAlgorithm(const Graph & graph)
     | std::views::join_with(std::string_view(" -> "))
     | std::ranges::to<std::string>();
 
-  std::cout << fmt::format("Successfully completed Fleaury algorithm: {}\n", formattedPath);
+  std::cout << fmt::format("Successfully completed Fleury algorithm: {}\n", formattedPath);
 
   return true;
 
