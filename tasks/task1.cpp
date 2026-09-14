@@ -16,5 +16,9 @@ int main (int argc, char* argv[])
   const auto filePath = std::string(argv[1]);
   const auto graph = Graph::FromAdjencyMatrix(filePath);
 
+  if (graph.has_value()) {
+    Graph::RunFleuryAlgorithm(graph.value());
+  }
+
   return 0;
 }

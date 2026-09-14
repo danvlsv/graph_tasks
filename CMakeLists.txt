@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.28)
 
+set(CMAKE_CXX_COMPILER "g++-14")
+
 project (graph_tasks
   VERSION 0.1
   LANGUAGES CXX
