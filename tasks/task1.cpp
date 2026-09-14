@@ -1,4 +1,5 @@
 #include "graph_core/data/graph.hpp"
+#include "graph_core/utils/dot_exporter.hpp"
 
 #include <iostream>
 #include <optional>
@@ -14,11 +15,17 @@ int main (int argc, char* argv[])
   }
 
   const auto filePath = std::string(argv[1]);
-  const auto graph = Graph::FromAdjencyMatrix(filePath);
+  const auto graphOpt = Graph::FromAdjencyMatrix(filePath);
 
-  if (graph.has_value()) {
-    Graph::RunFleuryAlgorithm(graph.value());
+  if (!graphOpt.has_value()) {
+    std::cerr << "Invalid graph";
+    return 1;
   }
+
+  const auto & graph = graphOpt.value();
+  Graph::RunFleuryAlgorithm(graph);
+
+  graph_core::utils::DotExporter::Export(graph);
 
   return 0;
 }

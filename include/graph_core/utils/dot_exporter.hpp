@@ -8,8 +8,8 @@ namespace graph_core::utils
 
 class DotExporter : public IExporter
 {
-
-  bool Export(std::optional<std::string> filePath) override;
+public:
+  static bool Export(const data::Graph & graph, std::string_view filePostfix = "");
 
 };
 

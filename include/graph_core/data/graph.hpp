@@ -43,6 +43,16 @@ public:
     return degree;
   }
 
+  inline std::vector<std::vector<int>> GetAdjecencyMatrix() const noexcept
+  {
+    return m_adjacencyMatrix;
+  }
+
+  inline size_t GetVertexCount() const noexcept
+  {
+    return m_vertexCount;
+  }
+
   std::vector<int> RunDFS(size_t vertexIndex = 0);
 
 private:
@@ -51,7 +61,7 @@ private:
 public:
   static std::optional<Graph> FromAdjencyMatrix(std::optional<std::string> filePath);
 
-  static bool RunFleuryAlgorithm(const Graph & graph);
+  static std::optional<std::vector<size_t>> RunFleuryAlgorithm(const Graph & graph);
 
 private:
   std::vector<std::vector<int>> m_adjacencyMatrix;

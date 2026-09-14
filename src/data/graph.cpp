@@ -102,50 +102,55 @@ bool Graph::IsValidNextEdge(size_t start, size_t target)
   return edgeRemovedCount < initialCount ? false : true;
 }
 
-bool Graph::RunFleuryAlgorithm(const Graph & graph)
+std::optional<std::vector<size_t>> Graph::RunFleuryAlgorithm(const Graph & graph)
 {
   auto tempGraph = graph;
 
-  size_t startVertex = 0;
-  const auto oddVertices = std::views::iota(std::size_t{0}, tempGraph.m_vertexCount)
-    | std::views::filter([&tempGraph](std::size_t index) {
-        return tempGraph.GetVertexDegree(index) % 2 != 0;
-      })
-    | std::ranges::to<std::vector<std::size_t>>();
+  try {
+    size_t startVertex = 0;
+    const auto oddVertices = std::views::iota(std::size_t{0}, tempGraph.m_vertexCount)
+      | std::views::filter([&tempGraph](std::size_t index) {
+          return tempGraph.GetVertexDegree(index) % 2 != 0;
+        })
+      | std::ranges::to<std::vector<std::size_t>>();
 
-  if (2 == oddVertices.size()) {
-    startVertex = oddVertices[0];
-  } else if (!(0 == oddVertices.size())) {
-    std::cerr << "No Eulerian Path or Circuit exists.\n";
-    return false;
-  }
+    if (2 == oddVertices.size()) {
+      startVertex = oddVertices[0];
+    } else if (!(0 == oddVertices.size())) {
+      std::cerr << "No Eulerian Path or Circuit exists.\n";
+      return std::optional<std::vector<size_t>>{};
+    }
 
-  std::vector<size_t> path = {startVertex};
-  size_t target = startVertex;
+    std::vector<size_t> path = {startVertex};
+    size_t target = startVertex;
 
-  while (tempGraph.GetVertexDegree(target) > 0) {
-    for (size_t v = 0; v < tempGraph.m_vertexCount; v++) {
-      if (1 == tempGraph.m_adjacencyMatrix[target][v]) {
-        if (tempGraph.IsValidNextEdge(target, v)) {
-          tempGraph.m_adjacencyMatrix[target][v] =
-            tempGraph.m_adjacencyMatrix[v][target] = 0;
-          path.emplace_back(v);
-          target = v;
-          break;
+    while (tempGraph.GetVertexDegree(target) > 0) {
+      for (size_t v = 0; v < tempGraph.m_vertexCount; v++) {
+        if (1 == tempGraph.m_adjacencyMatrix[target][v]) {
+          if (tempGraph.IsValidNextEdge(target, v)) {
+            tempGraph.m_adjacencyMatrix[target][v] =
+              tempGraph.m_adjacencyMatrix[v][target] = 0;
+            path.emplace_back(v);
+            target = v;
+            break;
+          }
         }
       }
     }
+
+    auto formattedPath = path
+      | std::views::transform([](size_t n) { return std::to_string(n); })
+      | std::views::join_with(std::string_view(" -> "))
+      | std::ranges::to<std::string>();
+
+    std::cout << fmt::format("Successfully completed Fleury algorithm: {}\n", formattedPath);
+
+    return path;
+
+  } catch (std::exception & ex) {
+    std::cerr << fmt::format("Exception during Fleury Algorithm run: {}", ex.what());
+    return std::optional<std::vector<size_t>>{};
   }
-
-
-  auto formattedPath = path
-    | std::views::transform([](size_t n) { return std::to_string(n); })
-    | std::views::join_with(std::string_view(" -> "))
-    | std::ranges::to<std::string>();
-
-  std::cout << fmt::format("Successfully completed Fleury algorithm: {}\n", formattedPath);
-
-  return true;
 
 }
 

@@ -3,6 +3,9 @@
 
 #include <string>
 #include <optional>
+#include <string_view>
+
+#include "graph_core/data/graph.hpp"
 
 namespace graph_core::utils
 {
@@ -10,7 +13,25 @@ namespace graph_core::utils
 class IExporter
 {
 public:
-  virtual bool Export(std::optional<std::string> exportPath) = 0;
+  IExporter() = delete;
+
+protected:
+  inline static std::string GetVertexName(size_t index)
+  {
+    std::string name = "";
+
+    while (0 <= index ) {
+      name += static_cast<char>('A' + (index % 26));
+      if (index < 26) {
+        break;
+      }
+      index = (index / 26) - 1;
+    }
+
+    std::reverse(name.begin(), name.end());
+    return name;
+  }
+
 };
 
 }
