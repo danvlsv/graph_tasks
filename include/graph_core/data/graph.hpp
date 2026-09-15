@@ -30,7 +30,7 @@ public:
   inline int GetVertexDegree(size_t vertexIndex) const
   {
     if (vertexIndex >= m_vertexCount) {
-      throw std::out_of_range::exception();
+      throw std::out_of_range("Vertex index out of range");
     }
 
     int degree = 0;

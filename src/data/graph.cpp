@@ -63,20 +63,20 @@ std::optional<Graph> Graph::FromAdjencyMatrix(std::optional<std::string> filePat
 }
 
 void RecursiveDFS(
-  std::vector<std::vector<int>> & adj,
+  const std::vector<std::vector<int>> & adj,
   std::vector<bool> & visited,
   size_t target,
   std::vector<int> & res)
 {
   visited[target] = true;
-  res.emplace_back(target);
-  for (size_t i : adj[target]) {
-    if (false == visited[i]) {
+  res.emplace_back(static_cast<int>(target));
+
+  for (size_t i = 0; i < adj[target].size(); ++i) {
+    if (adj[target][i] == 1 && !visited[i]) {
       RecursiveDFS(adj, visited, i, res);
     }
   }
 }
-
 std::vector<int> Graph::RunDFS(size_t vertexIndex)
 {
   std::vector<bool> visited(m_vertexCount, false);
@@ -92,11 +92,11 @@ bool Graph::IsValidNextEdge(size_t start, size_t target)
     return true;
   }
 
-  int initialCount = RunDFS(start).size();
+  const int initialCount = RunDFS(start).size();
 
   m_adjacencyMatrix[start][target] = m_adjacencyMatrix[target][start] = 0;
 
-  int edgeRemovedCount = RunDFS(start).size();
+  const int edgeRemovedCount = RunDFS(start).size();
   m_adjacencyMatrix[start][target] = m_adjacencyMatrix[target][start] = 1;
 
   return edgeRemovedCount < initialCount ? false : true;
@@ -107,35 +107,83 @@ std::optional<std::vector<size_t>> Graph::RunFleuryAlgorithm(const Graph & graph
   auto tempGraph = graph;
 
   try {
-    size_t startVertex = 0;
-    const auto oddVertices = std::views::iota(std::size_t{0}, tempGraph.m_vertexCount)
-      | std::views::filter([&tempGraph](std::size_t index) {
-          return tempGraph.GetVertexDegree(index) % 2 != 0;
-        })
-      | std::ranges::to<std::vector<std::size_t>>();
+    size_t edgeCount = 0;
+    for (size_t i = 0; i < tempGraph.m_vertexCount; ++i) {
+      for (size_t j = i + 1; j < tempGraph.m_vertexCount; ++j) {
+        if (tempGraph.m_adjacencyMatrix[i][j] == 1) {
+          ++edgeCount;
+        }
+      }
+    }
 
-    if (2 == oddVertices.size()) {
-      startVertex = oddVertices[0];
-    } else if (!(0 == oddVertices.size())) {
+    if (edgeCount == 0) {
+      std::cerr << "Graph has no edges.\n";
+      return std::optional<std::vector<size_t>>{};
+    }
+
+    std::vector<size_t> oddVertices;
+    for (size_t i = 0; i < tempGraph.m_vertexCount; ++i) {
+      if (tempGraph.GetVertexDegree(i) % 2 != 0) {
+        oddVertices.push_back(i);
+      }
+    }
+
+    if (!(oddVertices.empty() || oddVertices.size() == 2)) {
       std::cerr << "No Eulerian Path or Circuit exists.\n";
       return std::optional<std::vector<size_t>>{};
     }
 
-    std::vector<size_t> path = {startVertex};
-    size_t target = startVertex;
+    size_t startVertex = 0;
+    if (oddVertices.size() == 2) {
+      startVertex = oddVertices[0];
+    } else {
+      for (size_t i = 0; i < tempGraph.m_vertexCount; ++i) {
+        if (tempGraph.GetVertexDegree(i) > 0) {
+          startVertex = i;
+          break;
+        }
+      }
+    }
 
-    while (tempGraph.GetVertexDegree(target) > 0) {
-      for (size_t v = 0; v < tempGraph.m_vertexCount; v++) {
-        if (1 == tempGraph.m_adjacencyMatrix[target][v]) {
-          if (tempGraph.IsValidNextEdge(target, v)) {
-            tempGraph.m_adjacencyMatrix[target][v] =
-              tempGraph.m_adjacencyMatrix[v][target] = 0;
-            path.emplace_back(v);
-            target = v;
+    auto reachable = tempGraph.RunDFS(startVertex);
+    std::vector<bool> visited(tempGraph.m_vertexCount, false);
+    for (auto v : reachable) {
+      visited[v] = true;
+    }
+
+    for (size_t i = 0; i < tempGraph.m_vertexCount; ++i) {
+      if (tempGraph.GetVertexDegree(i) > 0 && !visited[i]) {
+        std::cerr << "Graph is not connected; no Euler path/circuit exists.\n";
+        return std::optional<std::vector<size_t>>{};
+      }
+    }
+
+    std::vector<size_t> path = {startVertex};
+    size_t current = startVertex;
+
+    while (tempGraph.GetVertexDegree(current) > 0) {
+      bool found = false;
+      for (size_t v = 0; v < tempGraph.m_vertexCount; ++v) {
+        if (tempGraph.m_adjacencyMatrix[current][v] == 1) {
+          if (tempGraph.IsValidNextEdge(current, v)) {
+            tempGraph.m_adjacencyMatrix[current][v] = 0;
+            tempGraph.m_adjacencyMatrix[v][current] = 0;
+            path.push_back(v);
+            current = v;
+            found = true;
             break;
           }
         }
       }
+      if (!found) {
+        std::cerr << "Fleury algorithm stuck: no valid next edge.\n";
+        return std::optional<std::vector<size_t>>{};
+      }
+    }
+
+    if (path.size() != edgeCount + 1) {
+      std::cerr << "Euler path/circuit not complete (disconnected graph?).\n";
+      return std::optional<std::vector<size_t>>{};
     }
 
     auto formattedPath = path
@@ -147,7 +195,7 @@ std::optional<std::vector<size_t>> Graph::RunFleuryAlgorithm(const Graph & graph
 
     return path;
 
-  } catch (std::exception & ex) {
+    } catch (std::exception & ex) {
     std::cerr << fmt::format("Exception during Fleury Algorithm run: {}", ex.what());
     return std::optional<std::vector<size_t>>{};
   }
