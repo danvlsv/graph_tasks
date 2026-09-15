@@ -14,11 +14,11 @@ find_package(fmt)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-file(GLOB_RECURSE PERCOLATION_SOURCES CONFIGURE_DEPENDS
+file(GLOB_RECURSE GRAPH_SOURCES CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
 )
 
-add_library(graph_core STATIC ${PERCOLATION_SOURCES})
+add_library(graph_core STATIC ${GRAPH_SOURCES})
 target_include_directories(graph_core
   PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
