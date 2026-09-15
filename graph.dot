@@ -1,6 +1,0 @@
-graph G {
-  A -- B
-  A -- D
-  B -- C
-  C -- D
-}
